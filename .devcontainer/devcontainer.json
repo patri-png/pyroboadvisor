@@ -1,204 +1,108 @@
 {
-    "name": "IB Trading Development Environment - Enhanced",
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+    "name": "PyRoboAdvisor Trading Environment",
+    
+    // Use pre-built Python image to avoid compilation
+    "image": "mcr.microsoft.com/devcontainers/python:3.10-bullseye",
     
     "features": {
+        // Java for IB Gateway - use lighter version
         "ghcr.io/devcontainers/features/java:1": {
             "version": "11",
-            "jdkDistro": "ms"
+            "installGradle": false,
+            "installMaven": false
         },
-        "ghcr.io/devcontainers/features/desktop-lite:1": {
+        // Desktop features with optimized settings
+        "ghcr.io/devcontainers-contrib/features/desktop-lite-debian:1": {
             "password": "ibtrading",
             "webPort": "6080",
             "vncPort": "5901",
-            "noVncVersion": "1.4.0",
-            "webclient": "novnc"
+            "noVncVersion": "1.3.0",
+            "desktopEnvironment": "fluxbox"
         },
-        "ghcr.io/devcontainers/features/python:1": {
-            "version": "3.10"
-        },
-        "ghcr.io/devcontainers/features/node:1": {
-            "version": "18"
+        // Common utilities
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": false,
+            "installOhMyZsh": false,
+            "upgradePackages": false,
+            "username": "vscode",
+            "userUid": "1000",
+            "userGid": "1000"
         }
     },
     
-    "forwardPorts": [6080, 5901, 4001, 4002, 5000, 8080, 8081],
+    "forwardPorts": [6080, 5901, 4002, 8080],
     
     "portsAttributes": {
         "6080": {
             "label": "Desktop (noVNC)",
             "onAutoForward": "openBrowser",
-            "protocol": "https",
-            "requireLocalPort": false,
-            "elevateIfNeeded": false
+            "protocol": "http"
         },
         "5901": {
             "label": "VNC Direct",
-            "onAutoForward": "notify",
-            "protocol": "tcp",
-            "requireLocalPort": false
+            "onAutoForward": "silent"
         },
         "4002": {
             "label": "IB Gateway Paper API",
-            "onAutoForward": "notify",
-            "protocol": "tcp"
-        },
-        "4001": {
-            "label": "IB Gateway Live API",
-            "onAutoForward": "silent",
-            "protocol": "tcp"
+            "onAutoForward": "notify"
         },
         "8080": {
-            "label": "Trading Dashboard",
-            "onAutoForward": "notify",
-            "protocol": "http"
-        },
-        "8081": {
-            "label": "Alternative VNC Web",
-            "onAutoForward": "silent",
-            "protocol": "http"
+            "label": "Dashboard",
+            "onAutoForward": "silent"
         }
     },
     
-    "postCreateCommand": "bash .devcontainer/setup.sh && bash .devcontainer/complete-setup.sh && bash .devcontainer/safari-compatibility.sh",
+    // Simplified commands - avoid long-running scripts
+    "postCreateCommand": "bash -c 'chmod +x .devcontainer/*.sh 2>/dev/null || true; if [ -f .devcontainer/quick-setup.sh ]; then bash .devcontainer/quick-setup.sh; fi'",
     
-    "postStartCommand": "bash .devcontainer/verify-system.sh",
+    "postStartCommand": "echo 'Container ready! Run: start-trading'",
     
     "customizations": {
         "vscode": {
             "extensions": [
                 "ms-python.python",
                 "ms-python.vscode-pylance",
-                "ms-python.pylint",
-                "ms-python.black-formatter",
-                "ms-toolsai.jupyter",
-                "ms-toolsai.jupyter-keymap",
-                "ms-toolsai.jupyter-renderers",
-                "ms-vscode.vscode-json",
-                "redhat.vscode-yaml",
-                "esbenp.prettier-vscode",
-                "dbaeumer.vscode-eslint",
-                "eamodio.gitlens",
-                "mhutchie.git-graph"
+                "ms-toolsai.jupyter"
             ],
             "settings": {
-                "python.defaultInterpreterPath": "/usr/local/bin/python3",
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
                 "python.linting.enabled": true,
                 "python.linting.pylintEnabled": true,
-                "python.formatting.provider": "black",
-                "python.formatting.blackPath": "/usr/local/bin/black",
-                "editor.formatOnSave": true,
-                "editor.formatOnPaste": false,
-                "editor.rulers": [80, 120],
-                "files.trimTrailingWhitespace": true,
-                "files.insertFinalNewline": true,
                 "terminal.integrated.defaultProfile.linux": "bash",
                 "terminal.integrated.env.linux": {
                     "DISPLAY": ":1",
-                    "PYTHONPATH": "${workspaceFolder}",
-                    "VNC_PORT": "5901",
-                    "WEB_PORT": "6080",
-                    "IB_PORT": "4002"
-                },
-                "remote.autoForwardPortsSource": "process",
-                "remote.forwardOnOpen": true,
-                "remote.restoreForwardedPorts": true
+                    "PYTHONPATH": "${workspaceFolder}"
+                }
             }
-        },
-        "codespaces": {
-            "openFiles": [
-                "README.md",
-                "sample.py"
-            ],
-            "repositories": []
         }
     },
     
     "remoteEnv": {
         "DISPLAY": ":1",
-        "VNC_COL_DEPTH": "24",
-        "VNC_RESOLUTION": "1440x900",
+        "VNC_RESOLUTION": "1280x720",
         "VNC_DPI": "96",
-        "NOVNC_ENABLE_CLIPBOARD": "true",
         "PYTHONPATH": "${containerWorkspaceFolder}",
         "DEBIAN_FRONTEND": "noninteractive",
-        "TZ": "America/New_York",
-        "LANG": "en_US.UTF-8",
-        "LC_ALL": "en_US.UTF-8"
+        "TZ": "America/New_York"
     },
     
+    // Simplified mounts
     "mounts": [
-        {
-            "source": "devcontainer-cache",
-            "target": "/home/vscode/.cache",
-            "type": "volume"
-        },
-        {
-            "source": "trading-cache",
-            "target": "/workspace/cache",
-            "type": "volume"
-        }
+        "source=pyrobo-cache,target=/workspace/.cache,type=volume"
     ],
     
-    "containerEnv": {
-        "SHELL": "/bin/bash"
-    },
-    
-    "updateContentCommand": "pip3 install --upgrade pip && pip3 install --user -r requirements.txt 2>/dev/null || true",
-    
-    "waitFor": "postCreateCommand",
-    
-    "shutdownAction": "stopContainer",
-    
+    // Reduced resource requirements
     "hostRequirements": {
         "cpus": 2,
-        "memory": "4gb",
-        "storage": "32gb"
+        "memory": "2gb",
+        "storage": "16gb"
     },
     
-    "capAdd": [
-        "SYS_PTRACE"
-    ],
-    
-    "securityOpt": [
-        "seccomp=unconfined"
-    ],
-    
+    // Essential security settings only
     "runArgs": [
-        "--shm-size=1g",
-        "--ulimit", "nofile=65536:65536",
-        "--ulimit", "core=0:0"
+        "--cap-add=SYS_PTRACE",
+        "--security-opt", "seccomp=unconfined"
     ],
     
-    "overrideCommand": false,
-    
-    "userEnvProbe": "loginInteractiveShell",
-    
-    "remoteUser": "vscode",
-    
-    "otherPortsAttributes": {
-        "onAutoForward": "silent",
-        "protocol": "tcp"
-    },
-    
-    "updateRemoteUserUID": true,
-    
-    "containerUser": "vscode",
-    
-    "initializeCommand": "echo 'Starting PyRoboAdvisor DevContainer...'",
-    
-    "onCreateCommand": "echo 'Container created successfully'",
-    
-    "postAttachCommand": "echo -e '\\n🚀 PyRoboAdvisor Container Ready!\\n📊 VNC: http://localhost:6080\\n🔌 IB API: localhost:4002\\n📁 Run: python3 sample.py\\n'",
-    
-    "lifecycle": {
-        "postCreate": {
-            "script": ".devcontainer/lifecycle/post-create.sh",
-            "runAs": "root"
-        },
-        "postStart": {
-            "script": ".devcontainer/lifecycle/post-start.sh",
-            "runAs": "vscode"
-        }
-    }
+    "remoteUser": "vscode"
 }
