@@ -5,19 +5,17 @@
     "image": "mcr.microsoft.com/devcontainers/python:3.10-bullseye",
     
     "features": {
-        // Java for IB Gateway - use lighter version
+        // Java for IB Gateway
         "ghcr.io/devcontainers/features/java:1": {
             "version": "11",
             "installGradle": false,
             "installMaven": false
         },
-        // Desktop features with optimized settings
-        "ghcr.io/devcontainers-contrib/features/desktop-lite-debian:1": {
+        // Use official desktop-lite feature from Microsoft
+        "ghcr.io/devcontainers/features/desktop-lite:1": {
             "password": "ibtrading",
             "webPort": "6080",
-            "vncPort": "5901",
-            "noVncVersion": "1.3.0",
-            "desktopEnvironment": "fluxbox"
+            "vncPort": "5901"
         },
         // Common utilities
         "ghcr.io/devcontainers/features/common-utils:2": {
