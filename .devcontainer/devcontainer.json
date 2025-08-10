@@ -1,6 +1,7 @@
 {
-    "name": "IB Trading Development Environment",
+    "name": "IB Trading Development Environment - Enhanced",
     "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+    
     "features": {
         "ghcr.io/devcontainers/features/java:1": {
             "version": "11",
@@ -9,34 +10,195 @@
         "ghcr.io/devcontainers/features/desktop-lite:1": {
             "password": "ibtrading",
             "webPort": "6080",
-            "vncPort": "5901"
+            "vncPort": "5901",
+            "noVncVersion": "1.4.0",
+            "webclient": "novnc"
+        },
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.10"
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "18"
         }
     },
-    "forwardPorts": [6080, 5901, 4001, 4002, 5000, 8080],
+    
+    "forwardPorts": [6080, 5901, 4001, 4002, 5000, 8080, 8081],
+    
     "portsAttributes": {
         "6080": {
             "label": "Desktop (noVNC)",
-            "onAutoForward": "openBrowser"
+            "onAutoForward": "openBrowser",
+            "protocol": "https",
+            "requireLocalPort": false,
+            "elevateIfNeeded": false
+        },
+        "5901": {
+            "label": "VNC Direct",
+            "onAutoForward": "notify",
+            "protocol": "tcp",
+            "requireLocalPort": false
         },
         "4002": {
             "label": "IB Gateway Paper API",
-            "onAutoForward": "notify"
+            "onAutoForward": "notify",
+            "protocol": "tcp"
+        },
+        "4001": {
+            "label": "IB Gateway Live API",
+            "onAutoForward": "silent",
+            "protocol": "tcp"
         },
         "8080": {
             "label": "Trading Dashboard",
-            "onAutoForward": "notify"
+            "onAutoForward": "notify",
+            "protocol": "http"
+        },
+        "8081": {
+            "label": "Alternative VNC Web",
+            "onAutoForward": "silent",
+            "protocol": "http"
         }
     },
-    "postCreateCommand": "bash .devcontainer/setup.sh && bash .devcontainer/complete-setup.sh",
+    
+    "postCreateCommand": "bash .devcontainer/setup.sh && bash .devcontainer/complete-setup.sh && bash .devcontainer/safari-compatibility.sh",
+    
+    "postStartCommand": "bash .devcontainer/verify-system.sh",
+    
     "customizations": {
         "vscode": {
             "extensions": [
                 "ms-python.python",
+                "ms-python.vscode-pylance",
                 "ms-python.pylint",
+                "ms-python.black-formatter",
                 "ms-toolsai.jupyter",
+                "ms-toolsai.jupyter-keymap",
+                "ms-toolsai.jupyter-renderers",
                 "ms-vscode.vscode-json",
-                "redhat.vscode-yaml"
-            ]
+                "redhat.vscode-yaml",
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "eamodio.gitlens",
+                "mhutchie.git-graph"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python3",
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": true,
+                "python.formatting.provider": "black",
+                "python.formatting.blackPath": "/usr/local/bin/black",
+                "editor.formatOnSave": true,
+                "editor.formatOnPaste": false,
+                "editor.rulers": [80, 120],
+                "files.trimTrailingWhitespace": true,
+                "files.insertFinalNewline": true,
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.env.linux": {
+                    "DISPLAY": ":1",
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "VNC_PORT": "5901",
+                    "WEB_PORT": "6080",
+                    "IB_PORT": "4002"
+                },
+                "remote.autoForwardPortsSource": "process",
+                "remote.forwardOnOpen": true,
+                "remote.restoreForwardedPorts": true
+            }
+        },
+        "codespaces": {
+            "openFiles": [
+                "README.md",
+                "sample.py"
+            ],
+            "repositories": []
+        }
+    },
+    
+    "remoteEnv": {
+        "DISPLAY": ":1",
+        "VNC_COL_DEPTH": "24",
+        "VNC_RESOLUTION": "1440x900",
+        "VNC_DPI": "96",
+        "NOVNC_ENABLE_CLIPBOARD": "true",
+        "PYTHONPATH": "${containerWorkspaceFolder}",
+        "DEBIAN_FRONTEND": "noninteractive",
+        "TZ": "America/New_York",
+        "LANG": "en_US.UTF-8",
+        "LC_ALL": "en_US.UTF-8"
+    },
+    
+    "mounts": [
+        {
+            "source": "devcontainer-cache",
+            "target": "/home/vscode/.cache",
+            "type": "volume"
+        },
+        {
+            "source": "trading-cache",
+            "target": "/workspace/cache",
+            "type": "volume"
+        }
+    ],
+    
+    "containerEnv": {
+        "SHELL": "/bin/bash"
+    },
+    
+    "updateContentCommand": "pip3 install --upgrade pip && pip3 install --user -r requirements.txt 2>/dev/null || true",
+    
+    "waitFor": "postCreateCommand",
+    
+    "shutdownAction": "stopContainer",
+    
+    "hostRequirements": {
+        "cpus": 2,
+        "memory": "4gb",
+        "storage": "32gb"
+    },
+    
+    "capAdd": [
+        "SYS_PTRACE"
+    ],
+    
+    "securityOpt": [
+        "seccomp=unconfined"
+    ],
+    
+    "runArgs": [
+        "--shm-size=1g",
+        "--ulimit", "nofile=65536:65536",
+        "--ulimit", "core=0:0"
+    ],
+    
+    "overrideCommand": false,
+    
+    "userEnvProbe": "loginInteractiveShell",
+    
+    "remoteUser": "vscode",
+    
+    "otherPortsAttributes": {
+        "onAutoForward": "silent",
+        "protocol": "tcp"
+    },
+    
+    "updateRemoteUserUID": true,
+    
+    "containerUser": "vscode",
+    
+    "initializeCommand": "echo 'Starting PyRoboAdvisor DevContainer...'",
+    
+    "onCreateCommand": "echo 'Container created successfully'",
+    
+    "postAttachCommand": "echo -e '\\n🚀 PyRoboAdvisor Container Ready!\\n📊 VNC: http://localhost:6080\\n🔌 IB API: localhost:4002\\n📁 Run: python3 sample.py\\n'",
+    
+    "lifecycle": {
+        "postCreate": {
+            "script": ".devcontainer/lifecycle/post-create.sh",
+            "runAs": "root"
+        },
+        "postStart": {
+            "script": ".devcontainer/lifecycle/post-start.sh",
+            "runAs": "vscode"
         }
     }
 }
